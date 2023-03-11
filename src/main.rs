@@ -1,6 +1,7 @@
 use std::{
     fs::File,
     io::{stdin, Read},
+    path::Path,
     process::ExitCode,
 };
 
@@ -22,12 +23,17 @@ mod memory;
     long_about = None
 )]
 struct Args {
-    /// File to interpret
-    file_name: String,
+    /// File path to interpret
+    #[arg(short, long, default_value_t = String::from(""))]
+    file: String,
 
     /// Input data to pass to the program
     #[arg(short, long, default_value_t = String::from(""))]
     input: String,
+
+    /// Whether or not to evaluate passed input (through pipe or -i) as code. [default: false]
+    #[arg(short, long, default_value_t = false)]
+    evaluate: bool,
 
     /// Whether the input will be sanitized (new line and carrier return removed). [default: true]
     #[arg(short, long, default_value_t = true)]
@@ -38,7 +44,7 @@ struct Args {
     interactive: bool,
 
     /// What character to be returned as EOF when there is no more input to be read.
-    #[arg(short, long, default_value_t = 0 as char)]
+    #[arg(short = 'o', long, default_value_t = 0 as char)]
     eof: char,
 
     /// Size of the memory cell in bits, allowed values: 8, 16, 32
@@ -63,17 +69,34 @@ fn execute_code<CellType: MemoryCell + Clone>(
 fn main() -> ExitCode {
     let args = Args::parse();
 
-    let mut input_file = File::open(&args.file_name).expect("Could not open an input file.");
-
     let mut code = String::new();
-    input_file
-        .read_to_string(&mut code)
-        .expect("Could not read from input file.");
 
     let mut input_source = args.input;
 
     if input_source.len() == 0 && !atty::is(atty::Stream::Stdin) {
         stdin().lock().read_to_string(&mut input_source).unwrap();
+    }
+
+    if args.evaluate {
+        code = input_source.clone();
+        input_source.clear();
+    } else {
+        if args.file.len() == 0 {
+            println!("Either pass a file with -f or evaluate the code via -i or passed through a pipe character.");
+            return ExitCode::SUCCESS;
+        }
+
+        let file_path = Path::new(&args.file);
+
+        if !file_path.exists() {
+            println!("File '{}' does not exist.", args.file);
+            return ExitCode::FAILURE;
+        }
+
+        let mut input_file = File::open(&args.file).expect("Could not open an input file.");
+        input_file
+            .read_to_string(&mut code)
+            .expect("Could not read from input file.");
     }
 
     let mut source = InputSource::from(
