@@ -56,11 +56,11 @@ macro_rules! implement_memory_cell_type {
     ($type: ident) => {
         impl MemoryCell for $type {
             fn increase(&mut self) {
-                *self += 1;
+                *self = self.checked_add(1).unwrap_or(0);
             }
 
             fn decrease(&mut self) {
-                *self -= 1;
+                *self = self.checked_sub(1).unwrap_or(0);
             }
 
             fn read_char(&self) -> char {
