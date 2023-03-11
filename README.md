@@ -35,6 +35,11 @@ Options:
   -V, --version                    Print version
 ```
 
+# Building
+
+You will need to install rust, download the repository and run `cargo build --release` to build the release
+version of this interpreter.
+
 # License
 
 This program has been released under [Apache 2.0 License](LICENSE).
