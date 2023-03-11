@@ -20,7 +20,7 @@ Note that some programs require you to run in interactive mode and provide input
 ```cli
 CLI interpreter for Brain**** language
 
-Usage: bf_interpreter.exe [OPTIONS]
+Usage: bf_interpreter [OPTIONS]
 
 Options:
   -f, --file <FILE>                File path to interpret [default: ]
